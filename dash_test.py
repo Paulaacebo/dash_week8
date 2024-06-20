@@ -199,9 +199,9 @@ app.layout = html.Div([
 
 # Callback para actualizar la lista de ciudades seleccionadas
 @app.callback(
-    Output('city-selection-div', 'children'),
-    Input('apply-button', 'n_clicks'),
-    State('city-dropdown', 'value')
+    Output('city-selection-div', 'children'), # type: ignore
+    Input('apply-button', 'n_clicks'), # type: ignore
+    State('city-dropdown', 'value') # type: ignore
 )
 def update_city_selection(n_clicks, selected_cities):
     if not selected_cities:
@@ -222,11 +222,11 @@ def update_city_selection(n_clicks, selected_cities):
 
 # Callback para actualizar las gráficas según las ciudades seleccionadas
 @app.callback(
-    Output('graph-weekly-max-temp', 'figure'),
-    Output('graph-weather-type', 'figure'),
-    Output('graph-avr-week-temp', 'figure'),
-    Input('apply-button', 'n_clicks'),
-    State('city-dropdown', 'value')
+    Output('graph-weekly-max-temp', 'figure'), # type: ignore
+    Output('graph-weather-type', 'figure'), # type: ignore
+    Output('graph-avr-week-temp', 'figure'), # type: ignore
+    Input('apply-button', 'n_clicks'), # type: ignore
+    State('city-dropdown', 'value') # type: ignore
 )
 def update_graphs(n_clicks, selected_cities):
     if not selected_cities:
@@ -348,7 +348,3 @@ def update_graphs(n_clicks, selected_cities):
     )
     
     return fig_max_temp, fig_weather_type, fig_avr_week_temp
-
-# Ejecuta la aplicación
-if __name__ == '__main__':
-    app.run_server(debug=True)
