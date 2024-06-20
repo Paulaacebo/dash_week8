@@ -130,7 +130,6 @@ graph_avr_week_temp = dcc.Graph(figure=fig)
 #https://dash-bootstrap-components.opensource.faculty.ai/docs/themes/
 app = dash.Dash(external_stylesheets=[dbc.themes.SOLAR])
 server = app.server
-app = dash.Dash(__name__)
 
 #Dash components https://dash.plotly.com/dash-html-components
 app.layout = html.Div([
