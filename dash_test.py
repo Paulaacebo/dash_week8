@@ -187,11 +187,11 @@ app.layout = html.Div([
     html.Div([
         html.Div('Analyzed cities: Barcelona, Berlin, Madrid, Tenerife', 
                  style={'backgroundColor': 'coral', 'color': 'white', 'padding': '10px', 'margin': '10px'}),
+        html.Div(graph_weekly_max_temp, style={'padding': '20px', 'width': '100%'}),  # Esta gráfica ocupa toda la pantalla
         html.Div([
-            graph_weekly_max_temp, 
-            graph_weather_type, 
-            graph_avr_week_temp
-        ], style={'display': 'grid', 'gridTemplateColumns': 'repeat(2, 1fr)', 'gap': '20px'})
+            html.Div(graph_weather_type),
+            html.Div(graph_avr_week_temp)
+        ], style={'display': 'grid', 'gridTemplateColumns': 'repeat(2, 1fr)', 'gap': '20px', 'padding': '20px'})
     ], style={'padding': '20px'})
 ])
 
