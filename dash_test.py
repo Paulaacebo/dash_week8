@@ -134,7 +134,7 @@ app = dash.Dash(__name__)
 
 #Dash components https://dash.plotly.com/dash-html-components
 app.layout = html.Div([
-    html.H1('Weather Dashboard 2024', style={'textAlign': 'center', 'color': 'tropical'}),
+    html.H1('Weather Dashboard 2024', style={'textAlign': 'center', 'color': 'black'}),
     html.H2('Project Challenge', style={'paddingLeft': '30px'}),
     html.H3('Graphs', style={'paddingLeft': '30px'}),
     html.Div([
