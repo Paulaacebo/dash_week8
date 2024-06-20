@@ -176,24 +176,178 @@ graph_avr_week_temp = dcc.Graph(figure=fig)
 
 #Creating Dash
 #https://dash-bootstrap-components.opensource.faculty.ai/docs/themes/
+# Creando Dash
 app = dash.Dash(external_stylesheets=[dbc.themes.SLATE])
 server = app.server
 
-#Dash components https://dash.plotly.com/dash-html-components
+# Dash components https://dash.plotly.com/dash-html-components
 app.layout = html.Div([
-    html.H1('Weather Dashboard 2024', style={'textAlign': 'center', 'color': 'black'}),
+    html.H1('Weather Dashboard 2024', style={'textAlign': 'center', 'color': 'white'}),
     html.H2('Project Challenge', style={'paddingLeft': '30px'}),
     html.H3('Graphs', style={'paddingLeft': '30px'}),
     html.Div([
         html.Div('Analyzed cities: Barcelona, Berlin, Madrid, Tenerife', 
-                 style={'backgroundColor': 'coral', 'color': 'white', 'padding': '10px', 'margin': '10px'}),
-        html.Div(graph_weekly_max_temp, style={'padding': '20px', 'width': '100%'}),  # Esta gráfica ocupa toda la pantalla
+                 style={'backgroundColor': 'blue', 'color': 'white', 'padding': '10px', 'margin': '10px'}),
+        html.Div(id='city-selection-div'),  # Placeholder para actualizar dinámicamente las ciudades seleccionadas
+        html.Div(graph_weekly_max_temp, id='graph-weekly-max-temp', style={'padding': '20px', 'width': '100%'}),  # Esta gráfica ocupa toda la pantalla
         html.Div([
             html.Div(graph_weather_type),
             html.Div(graph_avr_week_temp)
         ], style={'display': 'grid', 'gridTemplateColumns': 'repeat(2, 1fr)', 'gap': '20px', 'padding': '20px'})
     ], style={'padding': '20px'})
 ])
+
+# Callback para actualizar la lista de ciudades seleccionadas
+@app.callback(
+    Output('city-selection-div', 'children'),
+    Input('apply-button', 'n_clicks'),
+    State('city-dropdown', 'value')
+)
+def update_city_selection(n_clicks, selected_cities):
+    if not selected_cities:
+        selected_cities = ['Barcelona', 'Berlin', 'Madrid', 'Tenerife']  # Ciudades por defecto
+    
+    dropdown = html.Div([
+        html.Label('Select cities:'),
+        dcc.Dropdown(
+            id='city-dropdown',
+            options=[{'label': city, 'value': city} for city in df_mart_week['city'].unique()],
+            multi=True,
+            value=selected_cities
+        ),
+        html.Button('Apply', id='apply-button', n_clicks=0)
+    ])
+    
+    return dropdown
+
+# Callback para actualizar las gráficas según las ciudades seleccionadas
+@app.callback(
+    Output('graph-weekly-max-temp', 'figure'),
+    Output('graph-weather-type', 'figure'),
+    Output('graph-avr-week-temp', 'figure'),
+    Input('apply-button', 'n_clicks'),
+    State('city-dropdown', 'value')
+)
+def update_graphs(n_clicks, selected_cities):
+    if not selected_cities:
+        selected_cities = ['Barcelona', 'Berlin', 'Madrid', 'Tenerife']  # Ciudades por defecto
+    
+    # Filtrar los datos según las ciudades seleccionadas
+    filtered_data = df_mart_week[df_mart_week['city'].isin(selected_cities)]
+    
+    # Actualizar gráfico de temperatura máxima semanal
+    fig_max_temp = px.line(
+        filtered_data, 
+        x="week_of_year", 
+        y="max_temp_c", 
+        color="city",
+        title="Weekly Maximum Temperature per City",
+        labels={'week_of_year': 'Week of the Year', 'max_temp_c': 'Max Temperature (°C)', 'city': 'City'}
+    )
+    fig_max_temp.update_layout(
+        plot_bgcolor="#222222", 
+        paper_bgcolor="#222222", 
+        font_color="white",
+        title_font_size=20,
+        legend_title_text='City',
+        legend_title_font_size=14,
+        legend_font_size=12
+    )
+    fig_max_temp.update_traces(
+        line=dict(width=2),
+        marker=dict(size=8)
+    )
+    fig_max_temp.update_xaxes(
+        title_text='Week of the Year',
+        title_font=dict(size=14, color='white'),
+        tickfont=dict(color='white'),
+        gridcolor='gray'
+    )
+    fig_max_temp.update_yaxes(
+        title_text='Max Temperature (°C)',
+        title_font=dict(size=14, color='white'),
+        tickfont=dict(color='white'),
+        gridcolor='gray'
+    )
+    
+    # Actualizar gráfico de tipo de clima
+    fig_weather_type = px.bar(
+        df_month[df_month['city'].isin(selected_cities)], 
+        x='city', 
+        y=['sunny_days', 'rainy_days', 'snowy_days'],  
+        barmode='stack',
+        labels={'value': 'Number of Days', 'city': 'City'},
+        title="Number of Sunny, Rainy, and Snowy Days per Week",
+        height=400,
+        color_discrete_map={
+            'sunny_days': 'orange',
+            'rainy_days': 'blue',
+            'snowy_days': 'gray'
+        }
+    )
+    fig_weather_type.for_each_trace(lambda t: t.update(name={
+        'sunny_days': 'Sunny days',
+        'rainy_days': 'Rainy days',
+        'snowy_days': 'Snowy days'
+    }[t.name]))
+    fig_weather_type.update_layout(
+        plot_bgcolor="#222222", 
+        paper_bgcolor="#222222", 
+        font_color="white",
+        title_font_size=20,
+        legend_title_text='Weather Type',
+        legend_title_font_size=14,
+        legend_font_size=12
+    )
+    fig_weather_type.update_xaxes(title_text='City')
+    fig_weather_type.update_yaxes(title_text='Number of Days')
+    
+    # Actualizar gráfico de temperatura promedio semanal
+    fig_avr_week_temp = px.choropleth(
+        df_merged[df_merged['city'].isin(selected_cities)],
+        locations='alpha-3',           # Column containing ISO alpha-3 codes
+        color='max_temp_c',            # Column to map to color
+        hover_name='country',          # Column to use for hover information
+        animation_frame='year_and_week',  # Column to use for animation
+        projection='natural earth',    # Projection type for the map
+        color_continuous_scale='thermal',  # Color scale
+        title='Average Temperature'
+    )
+    fig_avr_week_temp.update_geos(
+        showcoastlines=True,           # Mostrar líneas costeras
+        coastlinecolor="Black",        # Color de las líneas costeras
+        showland=True,                 # Mostrar tierra
+        landcolor="white",             # Color de la tierra
+        showcountries=True,            # Mostrar límites de los países
+        countrycolor="gray",           # Color de los límites de los países
+        showframe=False,               # Ocultar el marco del mapa
+        showocean=True,                # Mostrar el océano
+        oceancolor="LightBlue",        # Color del océano
+        showlakes=True,                # Mostrar lagos
+        lakecolor="LightBlue",         # Color de los lagos
+        projection_scale=1.1           # Ajustar la escala de la proyección
+    )
+    fig_avr_week_temp.update_layout(
+        plot_bgcolor="#222222",        # Fondo del gráfico
+        paper_bgcolor="#222222",       # Fondo del papel
+        font_color="white",            # Color de la fuente
+        title_text='Average Weekly Temperature',
+        title_font_size=20,
+        coloraxis_colorbar=dict(
+            title="Temperature (°C)",
+            titlefont=dict(size=14, color='white'),  # Color y tamaño del título
+            tickfont=dict(color='white')  # Color de las etiquetas
+        ),
+        geo=dict(
+            showframe=False,
+            showcoastlines=True,
+            projection_scale=1.1  # Ajustar la escala de la proyección
+        ),
+        height=600,  # Altura del gráfico
+        width=800    # Ancho del gráfico
+    )
+    
+    return fig_max_temp, fig_weather_type, fig_avr_week_temp
 
 # Ejecuta la aplicación
 if __name__ == '__main__':
