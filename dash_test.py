@@ -104,6 +104,6 @@ def update_bar_chart(country):
     return fig # whatever you are returning here is connected to the component property of the output
 
 if __name__ == "__main__":
-    app.run_server(port=8088)
+    app.run_server()
 # you can change the port for the dashboard like this (be careful of reserved ports)
 
