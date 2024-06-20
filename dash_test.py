@@ -48,45 +48,85 @@ df_merged=pd.merge(df_mart_week, df_iso_selected, on='country')
 df_avg_temp = df_merged.groupby(['country', 'alpha-3', 'year_and_week'])['max_temp_c'].mean().reset_index()
 df_merged['max_temp_c'] = df_merged['max_temp_c'].round(2)
 
-#Graph 1 - Max temp per city
-fig = px.line(df_mart_week, 
-           x="week_of_year", 
-           y="max_temp_c", 
-           # animation_frame="week_of_year", # time as animation frame
-           color="city",
-           title="Weekly maximum temperature per city",
-           )
 
+# Graph 1 - Weekly Maximum Temperature per City
+fig = px.line(
+    df_mart_week, 
+    x="week_of_year", 
+    y="max_temp_c", 
+    color="city",
+    title="Weekly Maximum Temperature per City",
+    labels={'week_of_year': 'Week of the Year', 'max_temp_c': 'Max Temperature (°C)', 'city': 'City'}
+)
+fig.update_layout(
+    plot_bgcolor="#222222", 
+    paper_bgcolor="#222222", 
+    font_color="white",
+    title_font_size=20,
+    legend_title_text='City',
+    legend_title_font_size=14,
+    legend_font_size=12
+)
+fig.update_traces(
+    line=dict(width=2),
+    marker=dict(size=8)
+)
+fig.update_xaxes(
+    title_text='Week of the Year',
+    title_font=dict(size=14, color='white'),
+    tickfont=dict(color='white'),
+    gridcolor='gray'
+)
+fig.update_yaxes(
+    title_text='Max Temperature (°C)',
+    title_font=dict(size=14, color='white'),
+    tickfont=dict(color='white'),
+    gridcolor='gray'
+)
 graph_weekly_max_temp = dcc.Graph(figure=fig)
 
-#Graph 2
-fig = px.bar(df_month, 
-             x='city', 
-             y=['sunny_days','rainy_days','snowy_days'],  
-             # color=,
-             animation_frame='week_of_year',
-             barmode='stack',
-             orientation='v',
-             #height=800,
-             title="Number of sunny/cloudy/rainy/snowy days per week")
+#Graph 2 
+fig = px.bar(
+    df_month, 
+    x='city', 
+    y=['sunny_days', 'rainy_days', 'snowy_days'],  
+    barmode='stack',
+    labels={'value': 'Number of Days', 'city': 'City'},
+    title="Number of Sunny, Rainy, and Snowy Days per Week",
+    height=400,
+    color_discrete_map={
+        'sunny_days': 'orange',
+        'rainy_days': 'blue',
+        'snowy_days': 'gray'
+    }
+)
 
-graph_type_of_days = dcc.Graph(figure=fig)
+# Actualizar las etiquetas de la leyenda
+fig.for_each_trace(lambda t: t.update(name={
+    'sunny_days': 'Sunny days',
+    'rainy_days': 'Rainy days',
+    'snowy_days': 'Snowy days'
+}[t.name]))
 
-#Graph 3
-fig = px.scatter_mapbox(df_day,
-                        lat="lat", lon="lon",
-                        hover_name="max_temp_c",
-                        color="max_temp_c",
-                        animation_frame='date',
-                        size='uv',
-                        # start location and zoom level
-                        zoom=2, 
-                        center={'lat': 51.1657, 'lon': 10.4515}, # defining the staring coordinate of map
-                        mapbox_style='carto-positron') # map style 
+# Actualizar el layout para cambiar colores de fondo y fuentes
+fig.update_layout(
+    plot_bgcolor="#222222", 
+    paper_bgcolor="#222222", 
+    font_color="white",
+    title_font_size=20,
+    legend_title_text='Weather Type',
+    legend_title_font_size=14,
+    legend_font_size=12
+)
 
-graph_map = dcc.Graph(figure=fig)
+# Agregar estilos adicionales si es necesario
+fig.update_xaxes(title_text='City')
+fig.update_yaxes(title_text='Number of Days')
 
-#Graph 4
+# Crear el gráfico con Dash
+graph_weather_type = dcc.Graph(figure=fig)
+
+# Graph 3 Average Temperature
 fig = px.choropleth(
     df_merged,
     locations='alpha-3',           # Column containing ISO alpha-3 codes
@@ -95,7 +135,7 @@ fig = px.choropleth(
     animation_frame='year_and_week',  # Column to use for animation
     projection='natural earth',    # Projection type for the map
     color_continuous_scale='thermal',  # Color scale
-    title='Average temperature'
+    title='Average Temperature'
 )
 fig.update_geos(
     showcoastlines=True,           # Mostrar líneas costeras
@@ -109,17 +149,25 @@ fig.update_geos(
     oceancolor="LightBlue",        # Color del océano
     showlakes=True,                # Mostrar lagos
     lakecolor="LightBlue",         # Color de los lagos
-    projection_scale=50            # Ajustar la escala de la proyección
+    projection_scale=1.1           # Ajustar la escala de la proyección
 )
+
+# Actualizar el layout para cambiar colores de fondo y fuentes
 fig.update_layout(
-    title_text='Average weekly temp',
+    plot_bgcolor="#222222",        # Fondo del gráfico
+    paper_bgcolor="#222222",       # Fondo del papel
+    font_color="white",            # Color de la fuente
+    title_text='Average Weekly Temperature',
+    title_font_size=20,
     coloraxis_colorbar=dict(
-        title="Temperature (°C)"
+        title="Temperature (°C)",
+        titlefont=dict(size=14, color='white'),  # Color y tamaño del título
+        tickfont=dict(color='white')  # Color de las etiquetas
     ),
     geo=dict(
         showframe=False,
         showcoastlines=True,
-        projection_scale=50  # Ajustar la escala de la proyección
+        projection_scale=1.1  # Ajustar la escala de la proyección
     ),
     height=600,  # Altura del gráfico
     width=800    # Ancho del gráfico
@@ -141,9 +189,8 @@ app.layout = html.Div([
                  style={'backgroundColor': 'coral', 'color': 'white', 'padding': '10px', 'margin': '10px'}),
         html.Div([
             graph_weekly_max_temp, 
-            graph_type_of_days, 
-            graph_avr_week_temp, 
-            graph_map
+            graph_weather_type, 
+            graph_avr_week_temp
         ], style={'display': 'grid', 'gridTemplateColumns': 'repeat(2, 1fr)', 'gap': '20px'})
     ], style={'padding': '20px'})
 ])
