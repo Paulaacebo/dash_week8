@@ -40,7 +40,7 @@ df_day = pd.read_sql_query('SELECT * FROM mart_forecast_day', url)
 
 df_month = pd.read_sql_query('SELECT * FROM mart_conditions_month', url) 
 
-df_iso = pd.read_csv('../data/iso_codes.csv')
+df_iso = pd.read_csv('./data/iso_codes.csv')
 countries_of_interest = ['Spain', 'Germany']
 df_iso_selected = df_iso[df_iso['country'].isin(countries_of_interest)]
 
