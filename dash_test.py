@@ -15,7 +15,7 @@ import dash
 from dash import Dash, html, dcc, dash_table
 import dash_bootstrap_components as dbc
 
-config = dotenv_values()
+config = load_dotenv()
 print(config)
 weather_api_key = config['weatherapi']
 username = config['POSTGRES_USER']
