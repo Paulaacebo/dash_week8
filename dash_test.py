@@ -15,14 +15,20 @@ import dash
 from dash import Dash, html, dcc, dash_table
 import dash_bootstrap_components as dbc
 
-config = load_dotenv()
-print(config)
-weather_api_key = config['weatherapi']
-username = config['POSTGRES_USER']
-password = config['POSTGRES_PW']
-host = config['POSTGRES_HOST']
-port = config['POSTGRES_PORT']
-db_climate = config['DB_CLIMATE']
+load_dotenv()
+weather_api_key = os.getenv("weatherapi")
+username = os.getenv('POSTGRES_USER')
+password = os.getenv('POSTGRES_PW')
+host = os.getenv('POSTGRES_HOST')
+port = os.getenv('POSTGRES_PORT')
+db_climate = os.getenv('DB_CLIMATE')
+
+#weather_api_key = config['weatherapi']
+#username = config['POSTGRES_USER']
+#password = config['POSTGRES_PW']
+#host = config['POSTGRES_HOST']
+#port = config['POSTGRES_PORT']
+#db_climate = config['DB_CLIMATE']
 
 url = f'postgresql://{username}:{password}@{host}:{port}/climate'
 engine = create_engine(url, echo=True)
